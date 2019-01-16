@@ -1,0 +1,151 @@
+//定义对象“构造”函数
+function Probe() {
+    //本地存储
+    this.localStorage = window.localStorage;
+
+    /*
+    * @params gio预留字段
+    * opts = {
+    *   userId//用户id
+    *   companyId//公司id
+    *   companyName//公司名字
+    *   rightsGrade//权限
+    * }
+    * */
+    this.gioInit = function (opts) {
+        !function (e, t, n, g, i) {
+            e[i] = e[i] || function () {
+                (e[i].q = e[i].q || []).push(arguments)
+            }, n = t.createElement("script"), tag = t.getElementsByTagName("script")[0], n.async = 1, n.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + g, tag.parentNode.insertBefore(n, tag)
+        }(window, document, "script", "assets.growingio.com/2.1/gio.js", "gio");
+
+        gio('init', '87d10bc8158a4ed0a2206a6f0bdd2a5c', {});
+        //原CS1字段
+        gio('setUserId', opts.userId);
+        //原CS2-10字段
+        gio('app.set', {
+            'company_id': opts.companyId,
+            'company_name': opts.companyName,
+            'company_right': opts.rightsGrade
+        });
+        gio('send');
+    };
+
+    /*
+    * 记录gio事件来源页面
+    * @params
+    * key 标志符
+    * page 页面名称
+    * */
+    this.gioFromPage = function (key, page) {
+        if(this.localStorage){
+            var gioTrack = this.localStorage.gioTrack ? JSON.parse(this.localStorage.gioTrack) : {};
+
+            gioTrack[key] = page;
+            this.localStorage.setItem('gioTrack', JSON.stringify(gioTrack));
+        }
+    };
+
+    /*
+    * 记录gio事件来源位置
+    * @params position 位置名称
+    * */
+    this.gioFromPosition = function (key, position) {
+        if(this.localStorage){
+            var gioTrack = this.localStorage.gioTrack ? JSON.parse(this.localStorage.gioTrack) : {};
+
+            gioTrack[key] = position;
+            this.localStorage.setItem('gioTrack', JSON.stringify(gioTrack));
+        }
+    };
+
+    /*
+    * 获取localstorage中gio的来源页面和来源位置
+    * */
+    this.gioGetItem = function () {
+        if(this.localStorage){
+            var gioTrack = this.localStorage.gioTrack ? JSON.parse(this.localStorage.gioTrack) : {};
+
+            return gioTrack;
+        }else {
+            return {};
+        }
+
+    };
+
+    /*
+    * 删除localstorage中记录条目
+    * @params key 条目key
+    * */
+    this.gioRemoveItem = function (key) {
+        if(this.localStorage){
+            var gioTrack = this.localStorage.gioTrack ? JSON.parse(this.localStorage.gioTrack) : {};
+
+            delete gioTrack[key];
+            this.localStorage.setItem('gioTrack', JSON.stringify(gioTrack));
+        }
+    };
+
+    /*
+    * 打点事件
+    * @params
+    * eventId String 事件标识符
+    * number Number 事件的数值，事件自增number的数值
+    * eventLevelVariables JSON Object 包含事件级变量的JSON对象，暨事件发生时所伴随的维度信息
+    * */
+    this.gioTrack = function (eventId, number, eventLevelVariables) {
+        gio('track', eventId, number, eventLevelVariables);
+    };
+
+    /*
+    * type: 后端不同server探针类型
+    * */
+    this.tingyun = function () {
+        var location = window.location;
+        var hostname = location.hostname.replace('.kaoshixing.com', '');
+        var pathname = location.pathname.replace(/^(\/[a-z]+\/).+$/, '$1');
+        var tingyunType = '';
+
+        switch (hostname) {
+            case 'admin':
+                tingyunType = 'admin';
+                break;
+            case 'new':
+                tingyunType = 'analysis';
+                break;
+            case 'www':
+                if(pathname=='/account/' || pathname=='/admin/' || pathname=='/exam/') {
+                    tingyunType = 'home';
+                }else {
+                    tingyunType = 'website';
+                }
+                break;
+            case 'exam':
+                tingyunType = 'exam';
+                break;
+            case 'test':
+                tingyunType = 'test';
+                break;
+            case 'preview':
+                tingyunType = 'pre';
+                break;
+            case 'stag':
+                tingyunType = 'stag';
+                break;
+            default:
+                //用于本地调试
+                tingyunType = 'admin';
+        }
+
+        !function (e, t, n, g) {
+            var tag = t.getElementsByTagName("script")[0];
+            n = t.createElement("script");
+            n.async = 1;
+            n.src = 'https://cdnoss.kaoshixing.com/static/plugins/tingyunServer/' + g;
+            tag.parentNode.insertBefore(n, tag)
+        }(window, document, "script", 'tingyun-rum-'+tingyunType+'.js');
+    }
+
+}
+//使用new调用对象构造函数创建对象
+var ksxProbe = new Probe();
